@@ -84,9 +84,9 @@ exit
 
 function Get-BackupAgeHours {
   $q = @"
-SELECT NVL(ROUND((SYSDATE - MAX(completion_time))*24,2), -1)
-FROM v`$backup_set
-WHERE backup_type IN ('D','I');
+				SELECT NVL(ROUND((SYSDATE - MAX(completion_time))*24,2), -1)
+				FROM v`$backup_set
+				WHERE backup_type IN ('D','I');
 "@
   (Invoke-SqlPlus -Logon $Logon -Query $q)
 }
@@ -144,22 +144,22 @@ function Test-LastRMANSession {
 function Test-RestoreValidateAfterBackup {
   $q = @"
 				WITH b AS (
-  				SELECT MAX(completion_time) AS bkp_time
-  				FROM v`$backup_set
-  				WHERE backup_type IN ('D','I')
+  					SELECT MAX(completion_time) AS bkp_time
+  					FROM v`$backup_set
+  					WHERE backup_type IN ('D','I')
 				),
 				v AS (
-  				SELECT MAX(end_time) AS val_time
-  				FROM v`$rman_status
-  				WHERE operation = 'RESTORE VALIDATE' AND status='COMPLETED'
+  					SELECT MAX(end_time) AS val_time
+  					FROM v`$rman_status
+  					WHERE operation = 'RESTORE VALIDATE' AND status='COMPLETED'
 				)
 				SELECT CASE
-         WHEN b.bkp_time IS NULL THEN 0
-         WHEN v.val_time IS NULL THEN 0
-         WHEN v.val_time < b.bkp_time THEN 0
-         WHEN (SYSDATE - v.val_time)*24 > 24 THEN 0
-         ELSE 1
-       END
+         			WHEN b.bkp_time IS NULL THEN 0
+         			WHEN v.val_time IS NULL THEN 0
+         			WHEN v.val_time < b.bkp_time THEN 0
+         			WHEN (SYSDATE - v.val_time)*24 > 24 THEN 0
+         			ELSE 1
+       			END
 				FROM b, v;
 "@
   (Invoke-SqlPlus -Logon $Logon -Query $q)
