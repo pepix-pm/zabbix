@@ -93,75 +93,74 @@ WHERE backup_type IN ('D','I');
 
 function Get-RestoreValidateAgeHours {
   $q = @"
-SELECT NVL(ROUND((SYSDATE - MAX(end_time))*24,2), -1)
-FROM v'$rman_status
-WHERE operation = 'RESTORE VALIDATE' AND status='COMPLETED';
+				SELECT NVL(ROUND((SYSDATE - MAX(end_time))*24,2), -1)
+				FROM v'$rman_status
+				WHERE operation = 'RESTORE VALIDATE' AND status='COMPLETED';
 "@
   (Invoke-SqlPlus -Logon $Logon -Query $q)
 }
 
 function Get-RestoreValidateAgeHours {
   $q = @"
-SELECT NVL(ROUND((SYSDATE - MAX(end_time))*24,2), -1)
-FROM v`$rman_status
-WHERE operation = 'RESTORE VALIDATE' AND status='COMPLETED';
+				SELECT NVL(ROUND((SYSDATE - MAX(end_time))*24,2), -1)
+				FROM v`$rman_status
+				WHERE operation = 'RESTORE VALIDATE' AND status='COMPLETED';
 "@
   (Invoke-SqlPlus -Logon $Logon -Query $q)
 }
 
 function Get-LastRMANSessionAgeHours {
   $q = @"
-SELECT NVL(ROUND((SYSDATE - MAX(end_time))*24,2), -1)
-FROM v`$rman_status
-WHERE ROW_TYPE= 'SESSION';
+				SELECT NVL(ROUND((SYSDATE - MAX(end_time))*24,2), -1)
+				FROM v`$rman_status
+				WHERE ROW_TYPE= 'SESSION';
 "@
   (Invoke-SqlPlus -Logon $Logon -Query $q)
 }
 
 function Test-BackupWithin24h {
   $q = @"
-SELECT CASE
+				SELECT CASE
          WHEN MAX(completion_time) IS NULL THEN 0
          WHEN (SYSDATE - MAX(completion_time))*24 <= 24 THEN 1
          ELSE 0
        END
-FROM v`$backup_set
-WHERE backup_type IN ('D','I');
+				FROM v`$backup_set
+				WHERE backup_type IN ('D','I');
 "@
   (Invoke-SqlPlus -Logon $Logon -Query $q)
 }
 
 function Test-LastRMANSession {
   $q = @"
-SELECT DECODE(status, 'COMPLETED', 1, 0) FROM
-(
-select status from v`$rman_status WHERE ROW_TYPE = 'SESSION' order by recid desc
-)
-WHERE ROWNUM = 1;
+				SELECT DECODE(status, 'COMPLETED', 1, 0) 
+				FROM 
+						(SELECT status FROM v`$rman_status WHERE ROW_TYPE = 'SESSION' ORDER BY recid DESC)
+				WHERE ROWNUM = 1;
 "@
   (Invoke-SqlPlus -Logon $Logon -Query $q)
 }
 
 function Test-RestoreValidateAfterBackup {
   $q = @"
-WITH b AS (
-  SELECT MAX(completion_time) AS bkp_time
-  FROM v`$backup_set
-  WHERE backup_type IN ('D','I')
-),
-v AS (
-  SELECT MAX(end_time) AS val_time
-  FROM v`$rman_status
-  WHERE operation = 'RESTORE VALIDATE' AND status='COMPLETED'
-)
-SELECT CASE
+				WITH b AS (
+  				SELECT MAX(completion_time) AS bkp_time
+  				FROM v`$backup_set
+  				WHERE backup_type IN ('D','I')
+				),
+				v AS (
+  				SELECT MAX(end_time) AS val_time
+  				FROM v`$rman_status
+  				WHERE operation = 'RESTORE VALIDATE' AND status='COMPLETED'
+				)
+				SELECT CASE
          WHEN b.bkp_time IS NULL THEN 0
          WHEN v.val_time IS NULL THEN 0
          WHEN v.val_time < b.bkp_time THEN 0
          WHEN (SYSDATE - v.val_time)*24 > 24 THEN 0
          ELSE 1
        END
-FROM b, v;
+				FROM b, v;
 "@
   (Invoke-SqlPlus -Logon $Logon -Query $q)
 }
