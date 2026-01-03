@@ -94,7 +94,7 @@ WHERE backup_type IN ('D','I');
 function Get-RestoreValidateAgeHours {
   $q = @"
 				SELECT NVL(ROUND((SYSDATE - MAX(end_time))*24,2), -1)
-				FROM v'$rman_status
+				FROM v`$rman_status
 				WHERE operation = 'RESTORE VALIDATE' AND status='COMPLETED';
 "@
   (Invoke-SqlPlus -Logon $Logon -Query $q)
@@ -121,10 +121,10 @@ function Get-LastRMANSessionAgeHours {
 function Test-BackupWithin24h {
   $q = @"
 				SELECT CASE
-         WHEN MAX(completion_time) IS NULL THEN 0
-         WHEN (SYSDATE - MAX(completion_time))*24 <= 24 THEN 1
-         ELSE 0
-       END
+         			WHEN MAX(completion_time) IS NULL THEN 0
+         			WHEN (SYSDATE - MAX(completion_time))*24 <= 24 THEN 1
+         			ELSE 0
+       			END
 				FROM v`$backup_set
 				WHERE backup_type IN ('D','I');
 "@
@@ -135,7 +135,7 @@ function Test-LastRMANSession {
   $q = @"
 				SELECT DECODE(status, 'COMPLETED', 1, 0) 
 				FROM 
-						(SELECT status FROM v`$rman_status WHERE ROW_TYPE = 'SESSION' ORDER BY recid DESC)
+					(SELECT status FROM v`$rman_status WHERE ROW_TYPE = 'SESSION' ORDER BY recid DESC)
 				WHERE ROWNUM = 1;
 "@
   (Invoke-SqlPlus -Logon $Logon -Query $q)
