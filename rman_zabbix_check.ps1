@@ -1,4 +1,4 @@
- 
+  
 <#
 .SYNOPSIS
   Zabbix/PowerShell checker for Oracle RMAN: last backup (datafile D/I) in 24h and last RESTORE VALIDATE status.
@@ -27,8 +27,9 @@
 [CmdletBinding()]
 param(
   [Parameter(Mandatory=$true)]
-  [string]$Logon,
-
+  [string]$Login,
+  [Parameter(Mandatory=$true)]
+  [string]$Password,
   [ValidateSet(
     "backup_within_24h",
     "restore_validate_after_backup",
@@ -166,6 +167,8 @@ function Test-RestoreValidateAfterBackup {
 }
 
 try {
+  $Logon = $Login+'/'+$Password
+
   switch ($Metric) {
     "backup_age_hours"      { [Console]::Out.Write((Get-BackupAgeHours)); break }
     "restore_validate_age_hours"    { [Console]::Out.Write((Get-RestoreValidateAgeHours)); break }
@@ -181,12 +184,12 @@ try {
       $lrok  = Test-LastRMANSession
       $lrage = Get-LastRMANSessionAgeHours
       $obj = [ordered]@{
-        backup_age_hours      = [double]$bage
+        backup_age_hours      = [math]::Floor([double]$bage)
         backup_within_24h     = [int]$bok
-        restore_validate_age_hours    = [double]$vage
+        restore_validate_age_hours    = [math]::Floor([double]$vage)
         restore_validate_after_backup = [int]$vok
         last_rman_session = [int]$lrok
-        last_rman_session_age_hours = [double]$lrage
+        last_rman_session_age_hours = [math]::Floor([double]$lrage)
       }
       $json = ($obj | ConvertTo-Json -Compress)
       [Console]::Out.Write($json)
@@ -198,4 +201,4 @@ catch {
   # Zabbix friendly: print something and exit non-zero
   [Console]::Error.WriteLine("ERROR: $($_.Exception.Message)")
   exit 2
-}
+} 
