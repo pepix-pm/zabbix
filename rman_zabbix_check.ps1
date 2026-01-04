@@ -136,7 +136,8 @@ function Test-LastRMANSession {
   $q = @"
 				SELECT DECODE(status, 'COMPLETED', 1, 0) 
 				FROM 
-					(SELECT status FROM v`$rman_status WHERE ROW_TYPE = 'SESSION' ORDER BY recid DESC)
+					(SELECT status FROM v`$rman_status WHERE ROW_TYPE = 'SESSION' AND status NOT IN ('RUNNING') 
+ORDER BY recid DESC)
 				WHERE ROWNUM = 1;
 "@
   (Invoke-SqlPlus -Logon $Logon -Query $q)
