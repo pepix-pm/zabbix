@@ -4,7 +4,7 @@
   Zabbix/PowerShell checker for Oracle RMAN: last backup (datafile D/I) in 24h and last RESTORE VALIDATE status.
   Supported Oracle releases: tested on 12c database;
 
-.PARAMETER Logon
+.PARAMETER Login / Passsword
   SQL*Plus <logon>
   <logon> is: {<username>[/<password>][@<connect_identifier>] | / }
               [AS {SYSDBA | SYSOPER | SYSASM | SYSBACKUP | SYSDG | SYSKM | SYSRAC}] [EDITION=value]
